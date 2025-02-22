@@ -1,1 +1,40 @@
+name: Auto Commit Bot
 
+on:
+  schedule:
+    - cron: "0 */1* * *"  
+  workflow_dispatch:  
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0  
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "rexzea-bot"
+          git config --global user.email "178272406+rexzea@users.noreply.github.com"
+
+      - name: Sinkronisasi Remote
+        run: |
+          git fetch --all
+          git reset --hard origin/main
+          git pull origin main --rebase
+
+      - name: Perubahan (biar bisa commit)
+        run: |
+          echo "Terakhir update: $(date)" > update.log
+          git add update.log
+          git commit -m "Auto update: $(date)" || echo "Tidak ada perubahan untuk commit"
+
+      - name: Push perubahan ke repo dengan PAT
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          git push --force https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/rexzea/DeepSeek-V3.git main
